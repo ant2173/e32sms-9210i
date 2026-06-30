@@ -19,6 +19,26 @@ Project direction, experiment design, hardware testing, log collection and resul
 
 Code and documentation are developed with AI assistance and accepted only after practical testing.
 
+## Development journal
+
+A five-part story of bringing a Sega Master System emulator to the Nokia 9210i:
+
+### English
+
+1. [Hardcore vibe coding on a Nokia 9210i](docs/en/devlog/01-hardcore-vibe-coding.md)
+2. [Booting is not playing](docs/en/devlog/02-booting-is-not-playing.md)
+3. [The framebuffer war](docs/en/devlog/03-framebuffer-war.md)
+4. [Open-heart surgery](docs/en/devlog/04-open-heart-surgery.md)
+5. [Chasing frames](docs/en/devlog/05-chasing-frames.md)
+
+### Русский
+
+1. [Хардкорный вайбкодинг на Nokia 9210i](docs/ru/devlog/01-hardcore-vibecoding.md)
+2. [Запускается — не значит играет](docs/ru/devlog/02-boots-is-not-plays.md)
+3. [Война за framebuffer](docs/ru/devlog/03-framebuffer-war.md)
+4. [Операция на открытом сердце](docs/ru/devlog/04-open-heart-surgery.md)
+5. [В погоне за кадрами](docs/ru/devlog/05-chasing-frames.md)
+
 ## Repository status
 
 This repository is not ready for public use yet.

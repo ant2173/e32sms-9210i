@@ -1,5 +1,7 @@
 # E32SMS for Nokia 9210i
 
+![E32SMS running Sonic the Hedgehog on an original Nokia 9210i](docs/assets/readme/nokia-9210i-sonic-running.jpg)
+
 An AI-assisted port of SMS Plus (Sega Master System emulator; Version 1.3  by Charles MacDonald) to the Nokia 9210i, developed and tested on original hardware.
 
 ## Current status

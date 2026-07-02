@@ -48,3 +48,18 @@ A five-part story of bringing a Sega Master System emulator to the Nokia 9210i:
 ## Repository status
 
 This repository is not ready for public use yet.
+
+## Licensing status
+
+E32SMS does not currently have a single unified license.
+
+Most of the SMS Plus-derived code and the original E32SMS additions are
+intended to be distributed under GPL-2.0-or-later. However, the current source
+tree also contains a legacy Z80 CPU core subject to separate non-commercial
+terms, as well as a small amount of material with unresolved MAME provenance.
+
+For that reason, the current tree should be treated as a development and
+license-audit snapshot, not as a legally cleared GPL release.
+
+See [LICENSE.md](LICENSE.md) and
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for details.

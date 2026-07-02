@@ -40,3 +40,22 @@ roms/
 *.tmp
 *.bak
 *~
+
+# Retro software images
+*.d64
+*.t64
+*.prg
+
+# Symbian generated files
+ABLD.BAT
+*.aif
+*.rsc
+*.mbm
+*.log
+*.SIS
+
+# Legacy metadata and backups
+CVS/
+*.lnk
+*.~*
+*~cpp

@@ -236,22 +236,23 @@ void render_line(int line)
 {
     extern unsigned int ProfNow(void);
     extern void ProfRemapAdd(unsigned int);
+    extern void ProfCacheAdd(unsigned int);
+    extern void ProfBgAdd(unsigned int);
+    extern void ProfObjAdd(unsigned int);
     unsigned int _rt0, _rt1;
+    unsigned int _pt0, _pt1;
 
     /* Ensure we're within the viewport range */
     if(line >= vdp.height)
         return;
 
-    /* Point to current line in output buffer.
-       E32SMS / EKA1: for the indirect (depth != 8) path we offset 8 bytes into
-       internal_buffer so render_bg_sms()'s (0 - shift) underflow (up to -7)
-       stays inside the buffer. The remap loop below reads internal_buffer[i]
-       at the SAME +8 origin, so it must use linebuf, not &internal_buffer[0].
-       internal_buffer is 0x200, leaving ample tail padding past 8+256. */
     linebuf = (bitmap.depth == 8) ? &bitmap.data[(line * bitmap.pitch)] : &internal_buffer[8];
 
-    /* Update pattern cache */
+    /* Update pattern cache (timed) */
+    _pt0 = ProfNow();
     update_bg_pattern_cache();
+    _pt1 = ProfNow();
+    ProfCacheAdd(_pt1 - _pt0);
 
     /* Blank line (full width) */
     if(!(vdp.reg[1] & 0x40))
@@ -260,13 +261,23 @@ void render_line(int line)
     }
     else
     {
-        /* Draw background */
+        /* Draw background (timed) */
         if(render_bg != NULL)
+        {
+            _pt0 = ProfNow();
             render_bg(line);
+            _pt1 = ProfNow();
+            ProfBgAdd(_pt1 - _pt0);
+        }
 
-        /* Draw sprites */
+        /* Draw sprites (timed) */
         if(render_obj != NULL)
+        {
+            _pt0 = ProfNow();
             render_obj(line);
+            _pt1 = ProfNow();
+            ProfObjAdd(_pt1 - _pt0);
+        }
 
         /* Blank leftmost column of display */
         if(vdp.reg[0] & 0x20)
@@ -651,11 +662,31 @@ void remap_8_to_16(int line)
        (see MAKE_PIXEL under E32_RGB444). */
     if(g_vram_enable && g_vram_base)
     {
-        uint16 *dst = (uint16 *)(g_vram_base
+        /* Video memory is slow and prefers 32-bit bursts. Instead of writing
+           one 16-bit pixel at a time (256 slow VRAM stores per line), pack two
+           adjacent RGB444 pixels into a 32-bit word and write them together,
+           halving the number of VRAM accesses. 9210i is little-endian, so the
+           left pixel goes in the low 16 bits. viewport.w (256) is even, so the
+           pair loop covers the whole line; a tail handles an odd width just in
+           case. */
+        uint8  *ibp = ib + 8 + x0;               /* source index, +8 origin   */
+        uint32 *d32 = (uint32 *)(g_vram_base
                        + (g_vram_dy + line) * g_vram_stride
                        + (g_vram_dx + x0) * 2);
-        for(i = x0; i < xend; i++)
-            *dst++ = pal[ ib[i + 8] & PIXEL_MASK ];
+        int w  = xend - x0;
+        int wp = w >> 1;                          /* number of pixel PAIRS     */
+        int k;
+        for(k = 0; k < wp; k++)
+        {
+            uint32 lo = pal[ ibp[0] & PIXEL_MASK ];
+            uint32 hi = pal[ ibp[1] & PIXEL_MASK ];
+            *d32++ = lo | (hi << 16);
+            ibp += 2;
+        }
+        if(w & 1)   /* odd tail pixel */
+        {
+            *((uint16 *)d32) = pal[ ibp[0] & PIXEL_MASK ];
+        }
         return;
     }
 #endif

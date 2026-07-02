@@ -34,6 +34,9 @@ void system_reset(void);
 void system_frame(int skip_render);
 int  load_rom(char *filename);
 void render_reset(void);
+// ASM sanity-test functions (asmtest.S)
+int  asm_add(int a, int b);
+void asm_fill16(unsigned short* dst, int count, unsigned short val);
 // direct-to-VRAM output hooks (defined in sms_globals.c)
 extern unsigned char *g_vram_base;
 extern int            g_vram_stride;
@@ -59,6 +62,11 @@ extern "C" void ProfZ80Add(unsigned int d)    { gProfZ80us += (TInt)d; }
 extern "C" void ProfRenderAdd(unsigned int d)  { gProfRenderus += (TInt)d; }
 static TInt gProfRemapus = 0;
 extern "C" void ProfRemapAdd(unsigned int d)   { gProfRemapus += (TInt)d; }
+// split of the "drawing" part (render minus remap) into its three components
+static TInt gProfCacheus = 0, gProfBgus = 0, gProfObjus = 0;
+extern "C" void ProfCacheAdd(unsigned int d)   { gProfCacheus += (TInt)d; }
+extern "C" void ProfBgAdd(unsigned int d)      { gProfBgus += (TInt)d; }
+extern "C" void ProfObjAdd(unsigned int d)     { gProfObjus += (TInt)d; }
 
 // ---------------------------------------------------------------------------
 _LIT(KLog,  "C:\\e32smsemu.log");
@@ -208,6 +216,19 @@ GLDEF_C TInt E32Main()
         LC(); FreeWindow(); delete cleanup; return e;
         }
     LL(_L8("core up; entering loop\r\n"));
+
+    // --- ASM sanity test (Attempt A): prove .S compiles/links/callable ---
+    // asm_add(40,2) must be 42. asm_fill16 fills a small local array; we log
+    // one element to confirm it ran. If linking fails, the build won't produce
+    // an EXE at all (unresolved symbol), so reaching here already means link OK.
+    {
+    TInt sum = asm_add(40, 2);
+    LKV(_L8("asm_add_40_2"), sum);          // expect 42
+    unsigned short tmp[4]; tmp[0]=tmp[1]=tmp[2]=tmp[3]=0;
+    asm_fill16(tmp, 4, 0x0ABC);
+    LKV(_L8("asm_fill16_elem0"), (TInt)tmp[0]);  // expect 0x0ABC = 2748
+    LKV(_L8("asm_fill16_elem3"), (TInt)tmp[3]);  // expect 2748
+    }
     LC();
 
     // 3) game loop. Runs continuously (the 600-frame cap was only a test
@@ -222,29 +243,43 @@ GLDEF_C TInt E32Main()
     TTime fpsT0; fpsT0.HomeTime();
     TInt accCore = 0;   // system_frame() incl. direct-to-VRAM output
 
+    // Frameskip: render every (FRAMESKIP+1)-th frame; on skipped frames the
+    // core still runs the Z80 (game logic stays full-speed) but skips the whole
+    // render_line path (including remap-into-VRAM), which is our bottleneck.
+    // 0 = render every frame, 1 = render every 2nd, 2 = every 3rd.
+    // Tunable; 1 is usually invisible and ~1.7x smoother perceived motion.
+    const TInt FRAMESKIP = 1;
+    TInt skipCtr = 0;
+    TInt renderedFrames = 0;   // count of frames we actually rendered (for fps)
+
     for (;;)
         {
         TBool focused = (gWs.GetFocusWindowGroup() == gGrpId);
-        g_vram_enable = focused ? 1 : 0;   // gate VRAM writes by focus
+
+        // Decide whether THIS frame renders. Only render (and touch VRAM) on
+        // non-skipped frames, and only while focused.
+        TBool doRender = (skipCtr == 0);
+        if (++skipCtr > FRAMESKIP) skipCtr = 0;
+
+        g_vram_enable = (focused && doRender) ? 1 : 0;
 
         TTime tA; tA.HomeTime();
-        system_frame(0);   // run one SMS frame; renders + outputs to VRAM
+        system_frame(doRender ? 0 : 1);   // skip_render=1 on skipped frames
         TTime tB; tB.HomeTime();
         accCore += (TInt)tB.MicroSecondsFrom(tA).Int64().Low();
 
         if (focused)
             {
             lostFocus = 0;
-            // We write to VRAM directly, so we do NOT need to Invalidate the
-            // window or Flush the WS every frame (that was costing ~6ms/frame
-            // talking to the window server). We only Flush occasionally so the
-            // WS event queue is serviced and focus changes are still noticed.
+            if (doRender) ++renderedFrames;
+            // Direct VRAM writes: no per-frame Invalidate/Flush needed. Flush
+            // occasionally so the WS event queue is serviced (focus changes).
             if ((fpsFrames & 31) == 0)
                 gWs.Flush();
             }
         else
             {
-            // not focused: VRAM writes are gated off above. Count consecutive
+            // not focused: VRAM writes gated off above. Count consecutive
             // misses; after a while assume the user left and exit cleanly.
             if (++lostFocus > 120) break;   // ~ a couple seconds of no focus
             User::After(16000);
@@ -261,12 +296,18 @@ GLDEF_C TInt E32Main()
             TTimeIntervalMicroSeconds delta = now.MicroSecondsFrom(fpsT0);
             TInt64 us64 = delta.Int64();
             TInt us = (TInt)us64.Low();      // low 32 bits; fits our range
-            // fps*10 without 64-bit math: 100 frames -> fps10 = 1e9 / us
-            TInt fps10 = 0;
-            if (us > 0) fps10 = 1000000000 / us;   // (100 * 1e6 * 10) / us
-            TBuf8<160> b;
-            b.Format(_L8("frames=100 us=%d fps10=%d core_us=%d z80_us=%d rend_us=%d remap_us=%d\r\n"),
-                     us, fps10, accCore, gProfZ80us, gProfRenderus, gProfRemapus);
+            // fps10 = logic frames/sec x10 (system_frame calls; target 600).
+            // rfps10 = rendered frames/sec x10 (visual smoothness).
+            TInt fps10 = 0, rfps10 = 0;
+            if (us > 0)
+                {
+                fps10  = 1000000000 / us;                 // logic frames/sec x10
+                rfps10 = (renderedFrames * 10000000) / us; // rendered/sec x10
+                }
+            TBuf8<220> b;
+            b.Format(_L8("frames=100 us=%d fps10=%d rfps10=%d z80_us=%d rend_us=%d remap_us=%d cache_us=%d bg_us=%d obj_us=%d\r\n"),
+                     us, fps10, rfps10, gProfZ80us, gProfRenderus, gProfRemapus,
+                     gProfCacheus, gProfBgus, gProfObjus);
             if (gFs.Connect() == KErrNone)
                 {
                 RFile lf;
@@ -277,10 +318,14 @@ GLDEF_C TInt E32Main()
                 }
             fpsFrames = 0;
             fpsT0 = now;
+            renderedFrames = 0;
             accCore = 0;
             gProfZ80us = 0;
             gProfRenderus = 0;
             gProfRemapus = 0;
+            gProfCacheus = 0;
+            gProfBgus = 0;
+            gProfObjus = 0;
             }
         }
 

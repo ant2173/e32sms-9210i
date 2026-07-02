@@ -8,6 +8,8 @@
 
 An AI-assisted port of SMS Plus (Sega Master System emulator; Version 1.3  by Charles MacDonald) to the Nokia 9210i, developed and tested on original hardware.
 
+![Sonic running on the Nokia 9210i](docs/assets/sonic_running_demo.png)
+
 ## Current status
 
 Private working repository. Source code, build instructions, hardware tests and development notes are being prepared for publication.

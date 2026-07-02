@@ -29,6 +29,7 @@ SOURCE          state.c
 SOURCE          cpu\z80.c
 SOURCE          stubs.c
 SOURCE          sms_globals.c
+SOURCE          asmtest.S
 
 SOURCEPATH      ..\epoc
 SOURCE          e32smsemu_main.cpp

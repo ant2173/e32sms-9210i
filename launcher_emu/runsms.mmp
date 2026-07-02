@@ -1,0 +1,18 @@
+TARGET          runsms.app
+TARGETTYPE      app
+TARGETPATH      \system\apps\runsms
+UID             0x100039CE 0x01000791
+
+USERINCLUDE     .
+SYSTEMINCLUDE   \SDK9210\epoc32\include
+
+SOURCEPATH      \SDK9210\SOURCES\E32SMS\LAUNCHER_EMU
+SOURCE          runsms.cpp
+
+RESOURCE        runsms.rss
+
+LIBRARY         EUSER.LIB EFSRV.LIB
+LIBRARY         APPARC.LIB CONE.LIB
+LIBRARY         EIKCORE.LIB EIKCOCTL.LIB
+
+AIF             runsms.aif \SDK9210\SOURCES\E32SMS\LAUNCHER_EMU runsmsAif.rss

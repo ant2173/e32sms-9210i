@@ -1,0 +1,9 @@
+#include <aiftool.rh>
+RESOURCE AIF_DATA
+{
+    app_uid=0x01000791;
+    caption_list= { CAPTION { code=ELangEnglish; caption="E32SMS"; } };
+    num_icons=0;
+    embeddability=KAppNotEmbeddable;
+    newfile=KAppDoesNotSupportNewFile;
+}

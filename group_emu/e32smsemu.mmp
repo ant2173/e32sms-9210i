@@ -1,0 +1,44 @@
+// e32smsemu.mmp - Stage 1: SMS Plus core as a standalone EXE with plain
+// globals (SMS_GLOBALS) and direct VRAM output. No Frodo shell, no SMS_State().
+
+TARGET          e32smsemu.exe
+TARGETTYPE      exe
+UID             0x100039CE 0x01000790
+
+MACRO           SMS_GLOBALS
+MACRO           E32_RGB444
+
+SOURCEPATH      ..\smsplus
+USERINCLUDE     ..\src
+USERINCLUDE     ..\smsplus
+USERINCLUDE     ..\smsplus\cpu
+USERINCLUDE     ..\epoc
+SYSTEMINCLUDE   ..\src
+SYSTEMINCLUDE   \SDK9210\epoc32\include
+SYSTEMINCLUDE   \SDK9210\epoc32\include\libc
+
+SOURCE          sms.c
+SOURCE          system.c
+SOURCE          vdp.c
+SOURCE          render.c
+SOURCE          tms.c
+SOURCE          pio.c
+SOURCE          memz80.c
+SOURCE          loadrom.c
+SOURCE          state.c
+SOURCE          cpu\z80.c
+SOURCE          stubs.c
+SOURCE          sms_globals.c
+
+SOURCEPATH      ..\epoc
+SOURCE          e32smsemu_main.cpp
+
+LIBRARY         euser.lib efsrv.lib estlib.lib
+LIBRARY         ws32.lib hal.lib
+
+// Try to raise optimization for the hot Z80+VDP core. NOTE: on SDK9210
+// makmake is known to ignore the legacy `OPTION GCC -O2`; -O3 for the GCC
+// target is worth testing empirically (compare core_us before/after). If it
+// proves ignored, fall back to building the core as a separately gcc-built
+// static .lib (notaz approach: -O3 -fomit-frame-pointer -march=armv4t).
+OPTION GCC -O3 -fomit-frame-pointer

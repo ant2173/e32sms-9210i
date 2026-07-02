@@ -1,0 +1,11 @@
+NAME RNSM
+
+#include <eikon.rh>
+#include <eikon.rsg>
+
+RESOURCE RSS_SIGNATURE { }
+RESOURCE TBUF { buf=""; }
+RESOURCE EIK_APP_INFO { menubar = r_app_menubar; hotkeys = r_app_hotkeys; }
+RESOURCE HOTKEYS r_app_hotkeys { control = { HOTKEY { command=EEikCmdExit; key='e'; } }; }
+RESOURCE MENU_BAR r_app_menubar { titles = { MENU_TITLE { menu_pane=r_app_menu; txt="App"; } }; }
+RESOURCE MENU_PANE r_app_menu { items = { MENU_ITEM { command=EEikCmdExit; txt="Exit"; } }; }

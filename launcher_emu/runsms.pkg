@@ -1,0 +1,8 @@
+&EN
+
+#{"E32SMS"},(0x01000791),1,0,0
+
+"D:\SDK9210\Epoc32\Release\armi\urel\runsms.app"-"!:\System\Apps\runsms\runsms.app"
+"D:\SDK9210\Epoc32\Release\armi\urel\runsms.rsc"-"!:\System\Apps\runsms\runsms.rsc"
+"D:\SDK9210\Epoc32\Release\armi\urel\runsms.aif"-"!:\System\Apps\runsms\runsms.aif"
+"D:\SDK9210\Epoc32\Release\armi\urel\e32smsemu.exe"-"!:\System\Apps\e32smsemu\e32smsemu.exe"

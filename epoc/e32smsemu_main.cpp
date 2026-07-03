@@ -83,6 +83,10 @@ static CWsScreenDevice* gScr = 0;
 static CWindowGc*       gGc  = 0;
 static TInt             gGrpId = 0;
 static const TUint32    KWinHandle = 0x736d7377;
+static TRequestStatus   gWsEventStatus = KRequestPending;
+
+// (Step-1 key diagnostics that logged scancodes to C:\keys.log lived here;
+//  removed now that the 9210 scancode->SMS mapping is known and wired below.)
 
 static TInt ConstructWindow()
     {
@@ -101,6 +105,9 @@ static TInt ConstructWindow()
     gWin.SetSize(gScr->SizeInPixels());
     gWin.SetVisible(ETrue);
     gGrpId = gGrp.Identifier();
+    // subscribe to window-server events (keyboard) - non-blocking
+    gWsEventStatus = KRequestPending;
+    gWs.EventReady(&gWsEventStatus);
     gWs.Flush();
     return KErrNone;
     }
@@ -238,6 +245,50 @@ GLDEF_C TInt E32Main()
 
     for (;;)
         {
+        // --- poll window-server events (non-blocking) -> SMS controller ---
+        // 9210 scancodes discovered in step-1 diagnostics:
+        //   16=Up 17=Down 14=Left 15=Right  Z(89)=Button1  X(88)=Button2
+        //   Enter(3)=Pause/Start
+        // KeyDown (type 3) sets the bit, KeyUp (type 2) clears it. Movement and
+        // fire go to input.pad[0]; pause goes to input.system (INPUT_PAUSE).
+        if (gWsEventStatus != KRequestPending)
+            {
+            TWsEvent ev;
+            gWs.GetEvent(ev);
+            TInt t = ev.Type();
+            if (t == EEventKeyDown || t == EEventKeyUp)
+                {
+                TBool down = (t == EEventKeyDown);
+                TInt sc = ev.Key()->iScanCode;
+                TUint32 padbit = 0, sysbit = 0;
+                switch (sc)
+                    {
+                    case 16: padbit = INPUT_UP;      break;
+                    case 17: padbit = INPUT_DOWN;    break;
+                    case 14: padbit = INPUT_LEFT;    break;
+                    case 15: padbit = INPUT_RIGHT;   break;
+                    case 89: padbit = INPUT_BUTTON1; break;  // Z
+                    case 88: padbit = INPUT_BUTTON2; break;  // X
+                    case 3:  sysbit = INPUT_PAUSE;   break;  // Enter
+                    default: break;
+                    }
+                if (padbit)
+                    {
+                    if (down) input.pad[0] |=  padbit;
+                    else      input.pad[0] &= ~padbit;
+                    }
+                if (sysbit)
+                    {
+                    // Pause is edge-triggered/debounced in system_frame: set it
+                    // on key-down; clear on key-up so the debounce re-arms.
+                    if (down) input.system |=  sysbit;
+                    else      input.system &= ~sysbit;
+                    }
+                }
+            gWsEventStatus = KRequestPending;
+            gWs.EventReady(&gWsEventStatus);
+            }
+
         TBool focused = (gWs.GetFocusWindowGroup() == gGrpId);
 
         // Decide whether THIS frame renders. Only render (and touch VRAM) on

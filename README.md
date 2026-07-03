@@ -15,10 +15,13 @@ to the **Nokia 9210/9210i Communicator**.
 
 E32SMS boots and runs Sonic the Hedgehog on original Nokia 9210i hardware.
 
-The current experimental build reaches approximately **27.0 game-logic fps**
-and **13.5 rendered fps** with `frameskip = 1`. The first ARM assembly blitter
-has reduced indexed-colour conversion and framebuffer output from roughly
-14.8 ms to 8.2 ms per rendered frame.
+The current experimental build reaches approximately **27.0 emulated fps**
+and **13.5 rendered fps** with `frameskip = 1`.
+
+Keyboard input is now functional: directions, two action buttons and Pause are
+mapped to the Nokia 9210i keyboard, and the first level of Sonic the Hedgehog
+has been completed on original hardware. The build is playable, but it still
+runs at roughly 45% of the Master System's intended real-time pace.
 
 Current milestones:
 
@@ -29,6 +32,9 @@ Current milestones:
 - hardware profiling and measured rendering optimizations;
 - no game ROMs or copyrighted game data included.
 - first ARM assembly blitter integrated and validated on original hardware;
+- first ARM assembly framebuffer blitter integrated and validated on hardware;
+- functional Nokia keyboard input for directions, two buttons and Pause;
+- first Sonic level completed manually on original Nokia 9210i hardware;
 
 ## Target platform
 
@@ -64,6 +70,7 @@ crashes to measurable performance on original hardware.
 5. [Chasing frames](docs/en/devlog/05-chasing-frames.md)
 6. [From slideshow to motion](docs/en/devlog/06-from-slideshow-to-motion.md)
 7. [The first ARM assembly blitter](docs/en/devlog/07-first-arm-assembly.md)
+8. [The first playable build](docs/en/devlog/08-first-playable-build.md)
 
 ### Русский
 
@@ -74,6 +81,14 @@ crashes to measurable performance on original hardware.
 5. [В погоне за кадрами](docs/ru/devlog/05-chasing-frames.md)
 6. [Из слайд-шоу — в движение](docs/ru/devlog/06-from-slideshow-to-motion.md)
 7. [Первый ARM-ассемблерный блиттер](docs/ru/devlog/07-first-arm-assembly.md)
+8. [Первая играбельная сборка](docs/ru/devlog/08-first-playable-build.md)
+
+## Engineering notes
+
+- [ARM assembly remap-to-VRAM blitter](docs/en/engineering/arm-assembly-blitter.md)
+- [Nokia 9210i keyboard input](docs/en/engineering/keyboard-input.md)
+- [ARM-ассемблерный блиттер преобразования и вывода в VRAM](docs/ru/engineering/arm-assembly-blitter.md)
+- [Управление с клавиатуры Nokia 9210i](docs/ru/engineering/keyboard-input.md)
 
 ## Repository status
 

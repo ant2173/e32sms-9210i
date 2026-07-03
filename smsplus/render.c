@@ -662,19 +662,22 @@ void remap_8_to_16(int line)
        (see MAKE_PIXEL under E32_RGB444). */
     if(g_vram_enable && g_vram_base)
     {
-        /* Video memory is slow and prefers 32-bit bursts. Instead of writing
-           one 16-bit pixel at a time (256 slow VRAM stores per line), pack two
-           adjacent RGB444 pixels into a 32-bit word and write them together,
-           halving the number of VRAM accesses. 9210i is little-endian, so the
-           left pixel goes in the low 16 bits. viewport.w (256) is even, so the
-           pair loop covers the whole line; a tail handles an odd width just in
-           case. */
         uint8  *ibp = ib + 8 + x0;               /* source index, +8 origin   */
         uint32 *d32 = (uint32 *)(g_vram_base
                        + (g_vram_dy + line) * g_vram_stride
                        + (g_vram_dx + x0) * 2);
         int w  = xend - x0;
-        int wp = w >> 1;                          /* number of pixel PAIRS     */
+
+#if defined(E32_ASM_REMAP)
+        /* ARM assembly blitter: index -> palette -> paired burst write to VRAM.
+           Handles the whole line (including any odd tail) in asmblit.S. */
+        extern void asm_remap_line(unsigned short* dst, const unsigned char* src,
+                                   const unsigned short* pal, int npix);
+        asm_remap_line((unsigned short*)d32, ibp, pal, w);
+        return;
+#else
+        /* C paired-write fallback: pack two RGB444 pixels per 32-bit word. */
+        int wp = w >> 1;
         int k;
         for(k = 0; k < wp; k++)
         {
@@ -688,6 +691,7 @@ void remap_8_to_16(int line)
             *((uint16 *)d32) = pal[ ibp[0] & PIXEL_MASK ];
         }
         return;
+#endif
     }
 #endif
 

@@ -15,9 +15,10 @@ to the **Nokia 9210/9210i Communicator**.
 
 E32SMS boots and runs Sonic the Hedgehog on original Nokia 9210i hardware.
 
-The current experimental build reaches approximately **24.5 game-logic fps**
-and **12.2 rendered fps** with `frameskip = 1`. Keyboard input is not implemented
-yet, so this is still a research build rather than a playable release.
+The current experimental build reaches approximately **27.0 game-logic fps**
+and **13.5 rendered fps** with `frameskip = 1`. The first ARM assembly blitter
+has reduced indexed-colour conversion and framebuffer output from roughly
+14.8 ms to 8.2 ms per rendered frame.
 
 Current milestones:
 
@@ -27,6 +28,7 @@ Current milestones:
 - focus-gated VRAM access;
 - hardware profiling and measured rendering optimizations;
 - no game ROMs or copyrighted game data included.
+- first ARM assembly blitter integrated and validated on original hardware;
 
 ## Target platform
 
@@ -61,6 +63,7 @@ crashes to measurable performance on original hardware.
 4. [Open-heart surgery](docs/en/devlog/04-open-heart-surgery.md)
 5. [Chasing frames](docs/en/devlog/05-chasing-frames.md)
 6. [From slideshow to motion](docs/en/devlog/06-from-slideshow-to-motion.md)
+7. [The first ARM assembly blitter](docs/en/devlog/07-first-arm-assembly.md)
 
 ### Русский
 
@@ -70,6 +73,7 @@ crashes to measurable performance on original hardware.
 4. [Операция на открытом сердце](docs/ru/devlog/04-open-heart-surgery.md)
 5. [В погоне за кадрами](docs/ru/devlog/05-chasing-frames.md)
 6. [Из слайд-шоу — в движение](docs/ru/devlog/06-from-slideshow-to-motion.md)
+7. [Первый ARM-ассемблерный блиттер](docs/ru/devlog/07-first-arm-assembly.md)
 
 ## Repository status
 

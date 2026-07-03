@@ -34,9 +34,6 @@ void system_reset(void);
 void system_frame(int skip_render);
 int  load_rom(char *filename);
 void render_reset(void);
-// ASM sanity-test functions (asmtest.S)
-int  asm_add(int a, int b);
-void asm_fill16(unsigned short* dst, int count, unsigned short val);
 // direct-to-VRAM output hooks (defined in sms_globals.c)
 extern unsigned char *g_vram_base;
 extern int            g_vram_stride;
@@ -216,19 +213,6 @@ GLDEF_C TInt E32Main()
         LC(); FreeWindow(); delete cleanup; return e;
         }
     LL(_L8("core up; entering loop\r\n"));
-
-    // --- ASM sanity test (Attempt A): prove .S compiles/links/callable ---
-    // asm_add(40,2) must be 42. asm_fill16 fills a small local array; we log
-    // one element to confirm it ran. If linking fails, the build won't produce
-    // an EXE at all (unresolved symbol), so reaching here already means link OK.
-    {
-    TInt sum = asm_add(40, 2);
-    LKV(_L8("asm_add_40_2"), sum);          // expect 42
-    unsigned short tmp[4]; tmp[0]=tmp[1]=tmp[2]=tmp[3]=0;
-    asm_fill16(tmp, 4, 0x0ABC);
-    LKV(_L8("asm_fill16_elem0"), (TInt)tmp[0]);  // expect 0x0ABC = 2748
-    LKV(_L8("asm_fill16_elem3"), (TInt)tmp[3]);  // expect 2748
-    }
     LC();
 
     // 3) game loop. Runs continuously (the 600-frame cap was only a test

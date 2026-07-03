@@ -7,6 +7,7 @@ UID             0x100039CE 0x01000790
 
 MACRO           SMS_GLOBALS
 MACRO           E32_RGB444
+MACRO           E32_ASM_REMAP
 
 SOURCEPATH      ..\smsplus
 USERINCLUDE     ..\src
@@ -29,7 +30,7 @@ SOURCE          state.c
 SOURCE          cpu\z80.c
 SOURCE          stubs.c
 SOURCE          sms_globals.c
-SOURCE          asmtest.S
+SOURCE          asmblit.S
 
 SOURCEPATH      ..\epoc
 SOURCE          e32smsemu_main.cpp

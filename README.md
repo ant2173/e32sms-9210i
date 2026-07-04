@@ -98,9 +98,10 @@ crashes to measurable performance on original hardware.
 
 - [ARM assembly remap-to-VRAM blitter](docs/en/engineering/arm-assembly-blitter.md)
 - [Nokia 9210i keyboard input](docs/en/engineering/keyboard-input.md)
+- [Per-scanline sprite visibility table](docs/en/engineering/sprite-line-table.md)
 - [ARM-ассемблерный блиттер преобразования и вывода в VRAM](docs/ru/engineering/arm-assembly-blitter.md)
 - [Управление с клавиатуры Nokia 9210i](docs/ru/engineering/keyboard-input.md)
-- [Построчная таблица видимости спрайтов](docs/ru/engineering/sprite-line-table.md
+- [Построчная таблица видимости спрайтов](docs/ru/engineering/sprite-line-table.md)
 
 ## Repository status
 

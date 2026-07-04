@@ -23,6 +23,13 @@ mapped to the Nokia 9210i keyboard, and the first level of Sonic the Hedgehog
 has been completed on original hardware. The build is playable, but it still
 runs at roughly 45% of the Master System's intended real-time pace.
 
+
+The latest title-screen measurement reached approximately **27.0 emulated fps**
+and **13.5 rendered fps** with `frameskip = 1`. In a separate busy gameplay
+scene, the new per-scanline sprite table reduced sprite-rendering time from
+approximately **8.8 ms to 3.8 ms** per rendered frame. These scene-specific
+measurements should not be treated as a single overall-fps comparison.
+
 Current milestones:
 
 - SMS Plus core running on Symbian OS 6.0 / EKA1;
@@ -35,6 +42,8 @@ Current milestones:
 - first ARM assembly framebuffer blitter integrated and validated on hardware;
 - functional Nokia keyboard input for directions, two buttons and Pause;
 - first Sonic level completed manually on original Nokia 9210i hardware;
+- per-scanline sprite visibility table, reducing sprite rendering from ~8.8 ms
+  to ~3.8 ms in the measured gameplay scene.
 
 ## Target platform
 
@@ -71,6 +80,7 @@ crashes to measurable performance on original hardware.
 6. [From slideshow to motion](docs/en/devlog/06-from-slideshow-to-motion.md)
 7. [The first ARM assembly blitter](docs/en/devlog/07-first-arm-assembly.md)
 8. [The first playable build](docs/en/devlog/08-first-playable-build.md)
+9. [The last cheap win](docs/en/devlog/09-last-cheap-win.md)
 
 ### Русский
 
@@ -82,6 +92,7 @@ crashes to measurable performance on original hardware.
 6. [Из слайд-шоу — в движение](docs/ru/devlog/06-from-slideshow-to-motion.md)
 7. [Первый ARM-ассемблерный блиттер](docs/ru/devlog/07-first-arm-assembly.md)
 8. [Первая играбельная сборка](docs/ru/devlog/08-first-playable-build.md)
+9. [Последний дешёвый выигрыш](docs/ru/devlog/09-last-cheap-win.md)
 
 ## Engineering notes
 
@@ -89,6 +100,7 @@ crashes to measurable performance on original hardware.
 - [Nokia 9210i keyboard input](docs/en/engineering/keyboard-input.md)
 - [ARM-ассемблерный блиттер преобразования и вывода в VRAM](docs/ru/engineering/arm-assembly-blitter.md)
 - [Управление с клавиатуры Nokia 9210i](docs/ru/engineering/keyboard-input.md)
+- [Построчная таблица видимости спрайтов](docs/ru/engineering/sprite-line-table.md
 
 ## Repository status
 

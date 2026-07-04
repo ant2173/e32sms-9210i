@@ -232,6 +232,8 @@ void render_reset(void)
 
 
 /* Draw a line of the display */
+static void build_sprite_line_table(void);
+
 void render_line(int line)
 {
     extern unsigned int ProfNow(void);
@@ -245,6 +247,13 @@ void render_line(int line)
     /* Ensure we're within the viewport range */
     if(line >= vdp.height)
         return;
+
+    /* E32SMS perf: build the per-line visible-sprite table once per frame,
+       at the first visible line. render_obj_sms then walks only the sprites
+       on each line instead of scanning all 64. (Assumes the sprite attribute
+       table is stable within the frame, which holds for the target games.) */
+    if(line == 0 && render_obj == render_obj_sms)
+        build_sprite_line_table();
 
     linebuf = (bitmap.depth == 8) ? &bitmap.data[(line * bitmap.pitch)] : &internal_buffer[8];
 
@@ -321,7 +330,7 @@ void render_bg_sms(int line)
     uint32 *cache_ptr;
     uint32 *linebuf_ptr = (uint32 *)&lb[0 - shift];
 
-    /* Draw first column (clipped) */
+    /* Draw first column (clipped) - still writes directly to lb (small, cold) */
     if(shift)
     {
         int x;
@@ -354,7 +363,7 @@ void render_bg_sms(int line)
 
         /* Point to a line of pattern data in cache */
         cache_ptr = (uint32 *)&bgpc[((attr & 0x7FF) << 6) | (v_row)];
-        
+
         /* Copy the left half, adding the attribute bits in */
         write_dword( &linebuf_ptr[(column << 1)] , read_dword( &cache_ptr[0] ) | (atex_mask));
 
@@ -387,6 +396,69 @@ void render_bg_sms(int line)
 
 
 
+/* ------------------------------------------------------------------------
+   E32SMS perf: per-line visible-sprite table.
+
+   The original render_obj_sms scans all 64 sprites on EVERY line (64x192 =
+   12288 Y-tests/frame), even though each sprite covers only 8-16 lines. We
+   build, once per frame, a list of which sprite indices land on each line, so
+   the per-line draw walks only the few relevant sprites. Order (0..63) and the
+   8-per-line limit + overflow flag are preserved to match original behavior.
+   ------------------------------------------------------------------------ */
+#define SPR_PER_LINE 8            /* SMS draws at most 8 sprites per line */
+#define SPR_LINES    192
+static uint8 spr_cnt[SPR_LINES];                 /* sprites on each line (<=8) */
+static uint8 spr_idx[SPR_LINES][SPR_PER_LINE];   /* their indices, front-to-back */
+static uint8 spr_ovf[SPR_LINES];                 /* 1 = 9th sprite -> overflow  */
+
+/* Build the per-line table for the current frame. Mirrors the Y/marker/wrap
+   and size logic of render_obj_sms exactly. Call once at line 0. */
+static void build_sprite_line_table(void)
+{
+    vdp_t *vp = &vdp;
+    uint8 *st = (uint8 *)&vp->vram[vp->satb];
+    int height = (vp->reg[1] & 0x02) ? 16 : 8;
+    int i, l;
+
+    if(vp->reg[1] & 0x01) height *= 2;   /* double-size */
+
+    for(l = 0; l < SPR_LINES; l++) { spr_cnt[l] = 0; spr_ovf[l] = 0; }
+
+    for(i = 0; i < 64; i++)
+    {
+        int yp = st[i];
+
+        /* End-of-list marker (non-extended modes) */
+        if(vp->extended == 0 && yp == 208)
+            break;
+
+        yp++;                       /* actual Y is +1 */
+        if(yp > 240) yp -= 256;     /* wrap for sprites > 240 */
+
+        /* Add this sprite to every visible line it covers */
+        {
+            int y0 = yp;
+            int y1 = yp + height;    /* exclusive */
+            if(y0 < 0)   y0 = 0;
+            if(y1 > SPR_LINES) y1 = SPR_LINES;
+            for(l = y0; l < y1; l++)
+            {
+                int c = spr_cnt[l];
+                if(c < SPR_PER_LINE)
+                {
+                    spr_idx[l][c] = (uint8)i;
+                    spr_cnt[l] = (uint8)(c + 1);
+                }
+                else
+                {
+                    spr_ovf[l] = 1;   /* 9th sprite on this line */
+                }
+            }
+        }
+    }
+}
+
+
 /* Draw sprites */
 void render_obj_sms(int line)
 {
@@ -399,9 +471,6 @@ void render_obj_sms(int line)
 
     int i;
     uint8 collision_buffer = 0;
-
-    /* Sprite count for current line (8 max.) */
-    int count = 0;
 
     /* Sprite dimensions */
     int width = 8;
@@ -417,24 +486,25 @@ void render_obj_sms(int line)
         height *= 2;
     }
 
-    /* Draw sprites in front-to-back order */
-    for(i = 0; i < 64; i++)
+    /* Overflow flag from the prebuilt table (9th sprite on this line) */
+    if(line >= 0 && line < SPR_LINES && spr_ovf[line])
+        vp->status |= 0x40;
+
+    /* Draw only the sprites that the per-line table says are on this line,
+       still in front-to-back (index) order. */
     {
-        /* Sprite Y position */
-        int yp = st[i];
+    int k;
+    int nspr = (line >= 0 && line < SPR_LINES) ? spr_cnt[line] : 0;
+    for(k = 0; k < nspr; k++)
+    {
+        int yp, xp, n;
+        i = spr_idx[line][k];
 
-        /* Found end of sprite list marker for non-extended modes? */
-        if(vp->extended == 0 && yp == 208)
-            goto end;
-
-        /* Actual Y position is +1 */
+        /* Recover this sprite's actual Y (same math as the table builder) */
+        yp = st[i];
         yp++;
-
-        /* Wrap Y coordinate for sprites > 240 */
         if(yp > 240) yp -= 256;
 
-        /* Check if sprite falls on current line */
-        if((line >= yp) && (line < (yp + height)))
         {
             uint8 *linebuf_ptr;
 
@@ -443,20 +513,10 @@ void render_obj_sms(int line)
             int end = width;
 
             /* Sprite X position */
-            int xp = st[0x80 + (i << 1)];
+            xp = st[0x80 + (i << 1)];
 
             /* Pattern name */
-            int n = st[0x81 + (i << 1)];
-
-            /* Bump sprite count */
-            count++;
-
-            /* Too many sprites on this line ? */
-            if(count == 9)
-            {
-                vp->status |= 0x40;                
-                goto end;
-            }
+            n = st[0x81 + (i << 1)];
 
             /* X position shift */
             if(vp->reg[0] & 0x08) xp -= 8;
@@ -535,7 +595,7 @@ void render_obj_sms(int line)
             }
         }
     }
-end:
+    }
     /* Set sprite collision flag */
     if(collision_buffer & 0x40)
         vp->status |= 0x20;

@@ -29,6 +29,30 @@ and in `LICENSES/Z80-NONCOMMERCIAL-NOTICE.txt`.
 the core is replaced, E32SMS should not be represented as uniformly licensed
 under the GPL, and binary releases should not be published.
 
+## DrZ80 (optional, NOT present in this repository)
+
+E32SMS can optionally use **DrZ80**, a Z80 CPU core written in ARM assembly by
+**Reesy & FluBBa**, in place of the C interpreter (`smsplus/cpu/z80.c`). On the
+Nokia 9210i this roughly halves Z80 time, a large gain because the Z80 runs on
+every frame.
+
+DrZ80 is **not distributed with this repository.** The DrZ80 revision that builds
+and runs correctly on the SDK9210 toolchain is offered as "free for
+non-commercial use", which is incompatible with this project's GPL licensing.
+(The original DrZ80 Version 1.0, 2005, is pure GPLv2 and would be compatible, but
+it does not run in the EKA1 / ARM920T environment here — it compiles yet faults
+inside the core's own execution, an unresolved incompatibility.) The core is
+therefore treated as an optional, user-supplied component, mirroring how
+PicoDrive handles its own licence-encumbered components.
+
+`smsplus/cpu/drz80.S`, `smsplus/cpu/drz80.h` and `arm_features.h` are excluded via
+`.gitignore` and must be obtained by the user (see `DRZ80_OPTIONAL.md`). The
+adapter that connects DrZ80 to SMS Plus — `smsplus/cpu/drz80_glue.c` — is original
+work, part of E32SMS, licensed under the GPL like the rest of the project; it
+reproduces no DrZ80 source and was modeled on the interface approach of
+PicoDrive's `pico/z80if.c`. The default build uses the GPL C interpreter and does
+not require DrZ80.
+
 ## MAME-derived rendering helpers
 
 `smsplus/render.c` identifies its dword access helpers as originating from

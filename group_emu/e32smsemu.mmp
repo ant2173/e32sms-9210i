@@ -32,6 +32,14 @@ SOURCE          stubs.c
 SOURCE          sms_globals.c
 SOURCE          asmblit.S
 
+// --- Optional DrZ80 ARM-assembly Z80 core (see DRZ80_OPTIONAL.md) ---
+// DrZ80 itself (drz80.S/.h) is third-party and NOT distributed here.
+// To enable: obtain drz80.S/drz80.h, place them in smsplus/cpu/, and
+// uncomment the three lines below. The adapter drz80_glue.c is GPL and shipped.
+// SOURCE          cpu\drz80.S
+// SOURCE          cpu\drz80_glue.c
+// (and add:  MACRO  USE_DRZ80  in the MACRO block above)
+
 SOURCEPATH      ..\epoc
 SOURCE          e32smsemu_main.cpp
 

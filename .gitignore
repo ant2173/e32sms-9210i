@@ -59,3 +59,8 @@ CVS/
 *.lnk
 *.~*
 *~cpp
+# Third-party DrZ80 core (non-commercial licence, not distributed here).
+# Obtain from PicoDrive and place in smsplus/cpu/ — see DRZ80_OPTIONAL.md.
+smsplus/cpu/drz80.S
+smsplus/cpu/drz80.h
+smsplus/cpu/arm_features.h

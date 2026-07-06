@@ -2,7 +2,7 @@
 
 > [Читать по-русски](../../ru/devlog/README.md)
 
-A five-part series about porting a Sega Master System emulator to the Nokia 9210i, a 2002 Communicator running Symbian OS 6.0, EKA1 and an ARM920T at roughly 52 MHz.
+A development series about porting a Sega Master System emulator to the Nokia 9210i, a 2002 Communicator running Symbian OS 6.0, EKA1 and an ARM920T at roughly 52 MHz.
 
 The project is developed with substantial AI assistance, but every hypothesis, build and code change is tested on original hardware. The project author directs the investigation, builds the software, installs SIS packages, collects logs and makes the final call based on hardware results.
 
@@ -23,9 +23,24 @@ The project is developed with substantial AI assistance, but every hypothesis, b
 5. [Chasing Frames](05-chasing-frames.md)  
    Profiling, three hardware-tested optimisations and a rise from 12.5 to 15.2 FPS.
 
+6. [From Slideshow to Motion](06-from-slideshow-to-motion.md)  
+   Frame pacing, a merged remap-and-blit pass and the jump in perceived smoothness.
+
+7. [The First ARM Assembly](07-first-arm-assembly.md)  
+   The first hand-written ARM assembly routine, three toolchain traps and a faster VRAM blitter.
+
+8. [The First Playable Build](08-first-playable-build.md)  
+   Keyboard input, discovering the real scancodes on hardware and the first level cleared by hand.
+
+9. [The Last Cheap Win](09-last-cheap-win.md)  
+   A per-scanline visible-sprite list, why the biggest chunk was not the best target, and the optimisation ceiling.
+
+10. [A Heart Transplant](10-heart-transplant.md)  
+    Replacing the C Z80 interpreter with the DrZ80 ARM-assembly core for a ~2.1× CPU speedup — and the licensing lesson that followed.
+
 ## Current status
 
-Parts 1–5 cover the path from the first hardware output at roughly 0.1 FPS to a stable, profiled build at 15.2 FPS. The next instalment will focus on an ARM assembly renderer, frame pacing and keyboard input.
+Parts 1–10 cover the path from the first hardware output at roughly 0.1 FPS to a playable emulator with keyboard input and an ARM-assembly Z80 core. The Z80 core (DrZ80) is an optional, user-supplied component for licensing reasons; the default build uses the GPL C interpreter. See `DRZ80_OPTIONAL.md`.
 
 ## Development transparency
 
